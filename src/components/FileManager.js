@@ -1,93 +1,116 @@
 import React, { useEffect, useState } from 'react';
 import { database, ref, set, onValue, push, update, remove } from '../firebase';
-import { auth } from '../firebase'; 
+import { auth } from '../firebase'; // For accessing the current user's UID and email
 import { Link } from 'react-router-dom';
 
 const FileManager = () => {
   const [files, setFiles] = useState([]);
   const [newFileName, setNewFileName] = useState('');
+  const [newFileAllowedUsers, setNewFileAllowedUsers] = useState('');
   const currentUserEmail = auth.currentUser?.email;
 
-  // Fetch the files where the current user has access (as creator or in the allowed users list)
-  const fetchFiles = () => {
-    if (currentUserEmail) {
-      const filesRef = ref(database, `files`);
-      onValue(filesRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const accessibleFiles = Object.keys(data)
-            .filter(key => 
-              data[key].creator === currentUserEmail || 
-              (Array.isArray(data[key].allowedUsers) && data[key].allowedUsers.includes(currentUserEmail))
-            )
-            .map(key => ({
-              id: key,
-              fileName: data[key].fileName || 'Untitled',
-              creator: data[key].creator,
-              ...data[key]
-            }));
-          setFiles(accessibleFiles);
-        }
-      });
-    }
-  };
-
   useEffect(() => {
-    fetchFiles(); // Fetch files on mount
-  }, [currentUserEmail]); // Dependency array ensures it runs on user change
+    const filesRef = ref(database, `files`);
 
-  // Create a new file and automatically add the creator's email to the allowed users
+    const unsubscribe = onValue(filesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const accessibleFiles = Object.keys(data)
+          .filter(key => 
+            data[key].creator === currentUserEmail || 
+            (Array.isArray(data[key].allowedUsers) && data[key].allowedUsers.includes(currentUserEmail))
+          )
+          .map(key => ({
+            id: key,
+            fileName: data[key].fileName || 'Untitled',
+            creator: data[key].creator,
+            ...data[key]
+          }));
+        setFiles(accessibleFiles);
+      } else {
+        setFiles([]); // Clear the files state if no data
+      }
+    });
+
+    // Cleanup subscription on component unmount
+    return () => unsubscribe();
+  }, [currentUserEmail]); // Add currentUserEmail as a dependency to rerun effect when user changes
+
   const handleCreateFile = async () => {
     if (newFileName.trim() === "") {
       alert("File name cannot be empty");
       return;
     }
 
+    const allowedUsers = newFileAllowedUsers
+      ? newFileAllowedUsers.split(',').map(email => email.trim())
+      : [];
+
     const newFileRef = push(ref(database, `files`));
     await set(newFileRef, {
       fileName: newFileName,
       content: '',
       creator: currentUserEmail,
-      allowedUsers: [currentUserEmail] // Always add the creator's email
+      allowedUsers: [...allowedUsers, currentUserEmail] // Always add the creator's email
     });
 
-    // Clear input field
+    // Clear input fields
     setNewFileName('');
-
-    // Fetch updated files to reflect the new file
-    fetchFiles();
+    setNewFileAllowedUsers('');
   };
 
   const handleDeleteFile = async (fileId) => {
     const fileRef = ref(database, `files/${fileId}`);
     await remove(fileRef);
-    fetchFiles(); // Fetch updated files after deletion
   };
 
   return (
-    <div className="container">
-      <h2 className="text-center">File Manager</h2>
-      <div>
+    <div className="container my-5">
+      <h2 className="text-center mb-4">File Manager</h2>
+      <div className="mb-3">
         <input
           type="text"
-          placeholder="New File Name"
+          className="form-control"
+          placeholder="New file name"
           value={newFileName}
           onChange={(e) => setNewFileName(e.target.value)}
         />
-        <button className="btn btn-primary" onClick={handleCreateFile}>Create New File</button>
+        <input
+          type="text"
+          className="form-control mt-2"
+          placeholder="Allowed users (comma-separated)"
+          value={newFileAllowedUsers}
+          onChange={(e) => setNewFileAllowedUsers(e.target.value)}
+        />
+        <button className="btn btn-success mt-2" onClick={handleCreateFile}>Create File</button>
       </div>
-
-      <ul>
-        {files.map(file => (
-          <li key={file.id}>
-            <Link to={`/editor/${file.id}`}>{file.fileName}</Link>
-            <span className="ml-2">(Created by: {file.creator})</span>
-            {file.creator === currentUserEmail && (
-              <button className="btn btn-danger" onClick={() => handleDeleteFile(file.id)}>Delete File</button>
-            )}
-          </li>
-        ))}
-      </ul>
+      <table className="table table-bordered">
+        <thead>
+          <tr>
+            <th>File Name</th>
+            <th>Creator</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.length > 0 ? (
+            files.map(file => (
+              <tr key={file.id}>
+                <td>{file.fileName}</td>
+                <td>{file.creator}</td>
+                <td>
+                  <Link to={`/editor/${file.id}`} className="btn btn-info me-2">Edit</Link>
+                  <button className="btn btn-danger" onClick={() => handleDeleteFile(file.id)}>Delete</button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3" className="text-center">No files available</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
