@@ -1,20 +1,30 @@
-// src/components/Editor.js
 import React, { useEffect, useState } from 'react';
 import { database, ref, set, onValue } from '../firebase';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css'; // Import styles
+import 'react-quill/dist/quill.snow.css';
 import { useParams } from 'react-router-dom';
+import { auth } from '../firebase'; // For accessing the current user's UID
 
 const Editor = () => {
-  const { fileId } = useParams(); // Get fileId from URL parameters
+  const { fileId } = useParams();
   const [content, setContent] = useState('');
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     if (fileId) {
       const fileRef = ref(database, `files/${fileId}`);
       onValue(fileRef, (snapshot) => {
         if (snapshot.exists()) {
-          setContent(snapshot.val().content || '');
+          const fileData = snapshot.val();
+          const currentUserEmail = auth.currentUser?.email;
+
+          if (fileData.allowedUsers.includes(currentUserEmail)) {
+            setAllowed(true);
+            setContent(fileData.content || '');
+          } else {
+            setAllowed(false);
+            console.log('Access denied: You are not allowed to edit this file.');
+          }
         } else {
           console.log('No data available');
         }
@@ -23,10 +33,11 @@ const Editor = () => {
   }, [fileId]);
 
   const handleSave = async () => {
-    if (fileId) {
+    if (fileId && allowed) {
       try {
         await set(ref(database, `files/${fileId}`), {
           content: content,
+          allowedUsers: [auth.currentUser.email] // Ensure file ownership is kept intact
         });
         console.log('Data saved successfully');
       } catch (error) {
@@ -37,23 +48,26 @@ const Editor = () => {
 
   return (
     <div className="container">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <h2 className="text-center">Rich Text Editor</h2>
-          <ReactQuill
-            value={content}
-            onChange={setContent}
-            modules={Editor.modules}
-            formats={Editor.formats}
-          />
-          <button className="btn btn-primary mt-3" onClick={handleSave}>Save Content</button>
+      {allowed ? (
+        <div className="row justify-content-center">
+          <div className="col-md-8">
+            <h2 className="text-center">Rich Text Editor</h2>
+            <ReactQuill
+              value={content}
+              onChange={setContent}
+              modules={Editor.modules}
+              formats={Editor.formats}
+            />
+            <button className="btn btn-primary mt-3" onClick={handleSave}>Save Content</button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-center text-danger">You do not have access to this file.</p>
+      )}
     </div>
   );
 };
 
-// Configure modules and formats as needed
 Editor.modules = {
   toolbar: [
     [{ 'header': '1'}, { 'header': '2' }],
