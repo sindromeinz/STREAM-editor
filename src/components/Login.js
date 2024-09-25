@@ -30,12 +30,12 @@ const Login = () => {
   };
 
   return (
-    <div className="container">
+    <div className="container my-5">
       <div className="row justify-content-center">
-        <div className="col-md-4">
-          <h2 className="text-center">Login</h2>
+        <div className="col-md-6">
+          <h2 className="text-center mb-4">Login / Sign Up</h2>
           <form onSubmit={handleLogin}>
-            <div className="form-group">
+            <div className="form-group mb-3">
               <input
                 type="email"
                 className="form-control"
@@ -45,7 +45,7 @@ const Login = () => {
                 required
               />
             </div>
-            <div className="form-group">
+            <div className="form-group mb-3">
               <input
                 type="password"
                 className="form-control"
@@ -55,7 +55,7 @@ const Login = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary btn-block">Login</button>
+            <button type="submit" className="btn btn-primary btn-block mb-2">Login</button>
             <button type="button" className="btn btn-secondary btn-block" onClick={handleSignup}>Sign Up</button>
           </form>
         </div>

@@ -37,7 +37,7 @@ const Editor = () => {
       try {
         await set(ref(database, `files/${fileId}`), {
           content: content,
-          allowedUsers: [auth.currentUser.email] // Ensure file ownership is kept intact
+          allowedUsers: [auth.currentUser.email]
         });
         console.log('Data saved successfully');
       } catch (error) {
@@ -47,7 +47,7 @@ const Editor = () => {
   };
 
   return (
-    <div className="container">
+    <div className="container my-5">
       {allowed ? (
         <div className="row justify-content-center">
           <div className="col-md-8">

@@ -10,7 +10,6 @@ const FileManager = () => {
 
   const currentUserEmail = auth.currentUser?.email;
   
-  // Fetch the files where the current user has access (as creator or in the allowed users list)
   useEffect(() => {
     if (currentUserEmail) {
       const filesRef = ref(database, `files`);
@@ -25,7 +24,7 @@ const FileManager = () => {
             .map(key => ({
               id: key,
               fileName: data[key].fileName || 'Untitled',
-              creator: data[key].creator, // Store creator email
+              creator: data[key].creator,
               ...data[key]
             }));
           setFiles(accessibleFiles);
@@ -34,7 +33,6 @@ const FileManager = () => {
     }
   }, [currentUserEmail]);
 
-  // Create a new file and automatically add the creator's email to the allowed users
   const handleCreateFile = async () => {
     if (newFileName.trim() === "") {
       alert("File name cannot be empty");
@@ -56,7 +54,6 @@ const FileManager = () => {
     setNewFileAllowedUsers('');
   };
 
-  // Add or remove access for users from the file
   const handleUpdateAllowedUsers = async (fileId, updatedAllowedUsers) => {
     const fileRef = ref(database, `files/${fileId}`);
     await update(fileRef, { allowedUsers: updatedAllowedUsers });
@@ -68,43 +65,46 @@ const FileManager = () => {
   };
 
   return (
-    <div className="container">
-      <h2 className="text-center">File Manager</h2>
-      <div>
+    <div className="container my-5">
+      <h2 className="text-center mb-4">File Manager</h2>
+      <div className="mb-3">
         <input
           type="text"
-          placeholder="New File Name"
+          className="form-control"
+          placeholder="New file name"
           value={newFileName}
           onChange={(e) => setNewFileName(e.target.value)}
         />
         <input
           type="text"
-          placeholder="Allowed User Emails (comma separated)"
+          className="form-control mt-2"
+          placeholder="Allowed users (comma-separated)"
           value={newFileAllowedUsers}
           onChange={(e) => setNewFileAllowedUsers(e.target.value)}
         />
-        <button className="btn btn-primary" onClick={handleCreateFile}>Create New File</button>
+        <button className="btn btn-success mt-2" onClick={handleCreateFile}>Create File</button>
       </div>
-
-      <ul>
-        {files.map(file => (
-          <li key={file.id}>
-            <Link to={`/editor/${file.id}`}>{file.fileName}</Link>
-            <span className="ml-2">(Created by: {file.creator})</span>
-            {file.creator === currentUserEmail && (
-              <div>
-                <input
-                  type="text"
-                  defaultValue={file.allowedUsers.join(', ')}
-                  onBlur={(e) => handleUpdateAllowedUsers(file.id, e.target.value.split(',').map(email => email.trim()))}
-                  placeholder="Update Allowed Users"
-                />
-                <button className="btn btn-danger" onClick={() => handleDeleteFile(file.id)}>Delete File</button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      <table className="table table-bordered">
+        <thead>
+          <tr>
+            <th>File Name</th>
+            <th>Creator</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.map(file => (
+            <tr key={file.id}>
+              <td>{file.fileName}</td>
+              <td>{file.creator}</td>
+              <td>
+                <Link to={`/editor/${file.id}`} className="btn btn-info me-2">Edit</Link>
+                <button className="btn btn-danger" onClick={() => handleDeleteFile(file.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
