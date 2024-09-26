@@ -35,7 +35,7 @@ const Login = () => {
       <div className="shape"></div>
       <div className="shape"></div>
       <form onSubmit={handleLogin}>
-        <h3>Login Here</h3>
+        <h3>STREAM</h3>
 
         <label htmlFor="email">Email</label>
         <input

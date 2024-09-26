@@ -4,6 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useParams } from 'react-router-dom';
 import { auth } from '../firebase'; // For accessing the current user's UID
+import './Editor.css'
 
 const Editor = () => {
   const { fileId } = useParams();

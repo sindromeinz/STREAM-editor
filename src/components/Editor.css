@@ -1,0 +1,42 @@
+.ql-toolbar button,
+.ql-toolbar button svg {
+  color: white !important; /* Make toolbar buttons and icons white */
+  fill: white !important;  /* Ensure SVG icons are white */
+}
+
+/* Align toolbar icons in a straight line */
+.ql-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: transparent !important; /* Transparent background */
+  border: none; /* Remove any border from the toolbar */
+}
+
+/* Set proper alignment and spacing for the toolbar buttons */
+.ql-toolbar button {
+  margin: 0 5px; /* Add spacing between toolbar buttons */
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Editor container styling */
+.ql-container {
+  background-color: #1c1c1c; /* Dark background for editor */
+  color: white !important;   /* Ensure text inside the editor is white */
+  border-radius: 8px;
+  border: 1px solid #ccc; /* Optional border for clarity */
+}
+
+/* Editor text styling */
+.ql-editor {
+  color: white !important;    /* Ensure text is white */
+  background-color: #1c1c1c;  /* Dark background for the editor content */
+  min-height: 200px;
+}
+
+/* Placeholder text styling */
+.ql-editor.ql-blank::before {
+  color: #bdbdbd; /* Lighter placeholder text color */
+}
