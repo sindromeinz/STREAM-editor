@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { database, ref, set, onValue } from '../firebase';
+import { database, ref, update, onValue } from '../firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useParams } from 'react-router-dom';
@@ -35,13 +35,13 @@ const Editor = () => {
   const handleSave = async () => {
     if (fileId && allowed) {
       try {
-        await set(ref(database, `files/${fileId}`), {
-          content: content,
-          allowedUsers: [auth.currentUser.email]
+        // Update only the content field instead of overwriting the entire file data
+        await update(ref(database, `files/${fileId}`), {
+          content: content
         });
-        console.log('Data saved successfully');
+        console.log('Content updated successfully');
       } catch (error) {
-        console.error('Error writing data:', error);
+        console.error('Error updating content:', error);
       }
     }
   };
