@@ -1,0 +1,47 @@
+.input-section input {
+    margin-bottom: 10px;
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    color: #fff;
+  }
+  
+  .glass-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    color: #fff;
+  }
+  
+  .glass-table th, .glass-table td {
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+.glass-table th {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.edit-btn, .delete-btn {
+  padding: 8px 15px;
+  background-color: rgba(12, 34, 237, 0.5);
+  color: #eaf0fb;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+  background-color: rgba(255, 255, 255, 0.47);
+}
+  
+h2{
+    color:#fff;
+}

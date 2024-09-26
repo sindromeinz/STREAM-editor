@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './Login.css'; // Create a separate CSS file for custom styles
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -30,36 +31,38 @@ const Login = () => {
   };
 
   return (
-    <div className="container my-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <h2 className="text-center mb-4">Login / Sign Up</h2>
-          <form onSubmit={handleLogin}>
-            <div className="form-group mb-3">
-              <input
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary btn-block mb-2">Login</button>
-            <button type="button" className="btn btn-secondary btn-block" onClick={handleSignup}>Sign Up</button>
-          </form>
+    <div className="background">
+      <div className="shape"></div>
+      <div className="shape"></div>
+      <form onSubmit={handleLogin}>
+        <h3>Login Here</h3>
+
+        <label htmlFor="email">Email</label>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <label htmlFor="password">Password</label>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button type="submit">Log In</button>
+        <button type="button" onClick={handleSignup}>Sign Up</button>
+
+        <div className="social">
+          <div className="go"><i className="fab fa-google"></i> Google</div>
+          <div className="fb"><i className="fab fa-facebook"></i> Facebook</div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

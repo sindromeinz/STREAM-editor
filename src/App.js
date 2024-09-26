@@ -10,9 +10,6 @@ function App() {
   return (
     <Router>
       <div className="min-vh-100 d-flex flex-column">
-        <header className="bg-primary text-white text-center py-3">
-          <h1>STREAM-editor</h1>
-        </header>
         <div className="flex-grow-1">
           <Routes>
             <Route path="/" element={<Login />} />
@@ -20,9 +17,7 @@ function App() {
             <Route path="/editor/:fileId" element={<Editor />} />
           </Routes>
         </div>
-        <footer className="bg-light text-center py-3">
-          <p className="mb-0">© {new Date().getFullYear()} STREAM-editor. All rights reserved.</p>
-        </footer>
+        
       </div>
     </Router>
   );

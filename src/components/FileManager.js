@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { database, ref, set, onValue, push, update, remove } from '../firebase';
-import { auth } from '../firebase'; // For accessing the current user's UID and email
+import { database, ref, push, set, onValue, remove } from '../firebase';
+import { auth } from '../firebase'; 
 import { Link } from 'react-router-dom';
+import './FileManager.css'; // Custom styles
 
 const FileManager = () => {
   const [files, setFiles] = useState([]);
@@ -28,13 +29,12 @@ const FileManager = () => {
           }));
         setFiles(accessibleFiles);
       } else {
-        setFiles([]); // Clear the files state if no data
+        setFiles([]);
       }
     });
 
-    // Cleanup subscription on component unmount
     return () => unsubscribe();
-  }, [currentUserEmail]); // Add currentUserEmail as a dependency to rerun effect when user changes
+  }, [currentUserEmail]);
 
   const handleCreateFile = async () => {
     if (newFileName.trim() === "") {
@@ -51,10 +51,9 @@ const FileManager = () => {
       fileName: newFileName,
       content: '',
       creator: currentUserEmail,
-      allowedUsers: [...allowedUsers, currentUserEmail] // Always add the creator's email
+      allowedUsers: [...allowedUsers, currentUserEmail]
     });
 
-    // Clear input fields
     setNewFileName('');
     setNewFileAllowedUsers('');
   };
@@ -65,26 +64,24 @@ const FileManager = () => {
   };
 
   return (
-    <div className="container my-5">
-      <h2 className="text-center mb-4">File Manager</h2>
-      <div className="mb-3">
+    <div className="glass-container">
+      <h2>File Manager</h2>
+      <div className="input-section">
         <input
           type="text"
-          className="form-control"
           placeholder="New file name"
           value={newFileName}
           onChange={(e) => setNewFileName(e.target.value)}
         />
         <input
           type="text"
-          className="form-control mt-2"
           placeholder="Allowed users (comma-separated)"
           value={newFileAllowedUsers}
           onChange={(e) => setNewFileAllowedUsers(e.target.value)}
         />
-        <button className="btn btn-success mt-2" onClick={handleCreateFile}>Create File</button>
+        <button onClick={handleCreateFile}>Create File</button>
       </div>
-      <table className="table table-bordered">
+      <table className="glass-table">
         <thead>
           <tr>
             <th>File Name</th>
@@ -99,14 +96,14 @@ const FileManager = () => {
                 <td>{file.fileName}</td>
                 <td>{file.creator}</td>
                 <td>
-                  <Link to={`/editor/${file.id}`} className="btn btn-info me-2">Edit</Link>
-                  <button className="btn btn-danger" onClick={() => handleDeleteFile(file.id)}>Delete</button>
+                  <Link to={`/editor/${file.id}`} className="edit-btn">Edit</Link>
+                  <button className="delete-btn" onClick={() => handleDeleteFile(file.id)}>Delete</button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="text-center">No files available</td>
+              <td colSpan="3">No files available</td>
             </tr>
           )}
         </tbody>

@@ -35,9 +35,8 @@ const Editor = () => {
   const handleSave = async () => {
     if (fileId && allowed) {
       try {
-        // Update only the content field instead of overwriting the entire file data
         await update(ref(database, `files/${fileId}`), {
-          content: content
+          content: content,
         });
         console.log('Content updated successfully');
       } catch (error) {
@@ -52,13 +51,15 @@ const Editor = () => {
         <div className="row justify-content-center">
           <div className="col-md-8">
             <h2 className="text-center">Rich Text Editor</h2>
-            <ReactQuill
-              value={content}
-              onChange={setContent}
-              modules={Editor.modules}
-              formats={Editor.formats}
-            />
-            <button className="btn btn-primary mt-3" onClick={handleSave}>Save Content</button>
+            <div className="quill-container">
+              <ReactQuill
+                value={content}
+                onChange={setContent}
+                modules={Editor.modules}
+                formats={Editor.formats}
+              />
+              <button className="btn btn-primary mt-3" onClick={handleSave}>Save Content</button>
+            </div>
           </div>
         </div>
       ) : (
@@ -70,9 +71,9 @@ const Editor = () => {
 
 Editor.modules = {
   toolbar: [
-    [{ 'header': '1'}, { 'header': '2' }],
+    [{ 'header': '1' }, { 'header': '2' }],
     ['bold', 'italic', 'underline'],
-    [{'list': 'ordered'}, {'list': 'bullet'}],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
     ['link', 'image'],
     [{ 'color': [] }, { 'background': [] }],
     [{ 'font': [] }],
@@ -86,7 +87,7 @@ Editor.formats = [
   'list', 'bullet', 'indent',
   'link', 'image',
   'color', 'background',
-  'align'
+  'align',
 ];
 
 export default Editor;
