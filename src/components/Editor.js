@@ -14,6 +14,9 @@ const Editor = () => {
   const [showChatBot, setShowChatBot] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const saveTimeoutRef = useRef(null);
+  
+  // Create a ref for the ChatBot
+  const chatBotRef = useRef();
 
   useEffect(() => {
     if (fileId) {
@@ -67,6 +70,12 @@ const Editor = () => {
     setShowChatBot((prev) => !prev);
   };
 
+  const handleSummarize = () => {
+    if (chatBotRef.current) {
+      chatBotRef.current.handleCommand(`summarise ${content}`);
+    }
+  };
+
   return (
     <div className="container my-5 d-flex">
       {/* Sliding sidebar */}
@@ -76,6 +85,9 @@ const Editor = () => {
             <span className="button-text">
               {showChatBot ? 'Hide ChatBot' : 'Show ChatBot'}
             </span>
+          </button>
+          <button className="sidebar-button" onClick={handleSummarize}>
+            Summarise Content
           </button>
         </div>
       </div>
@@ -101,7 +113,7 @@ const Editor = () => {
 
         {showChatBot && (
           <div className="chatbot-container">
-            <ChatBot />
+            <ChatBot ref={chatBotRef} />
           </div>
         )}
       </div>
