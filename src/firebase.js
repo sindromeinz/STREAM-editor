@@ -1,6 +1,6 @@
 // src/firebase.js
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { getDatabase, ref, set, get, onValue, push, update, remove } from 'firebase/database';
 
 const firebaseConfig = {
@@ -18,4 +18,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
 
-export { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, database, ref, set, get, onValue, push, update, remove };
+// Google Authentication Provider
+const googleProvider = new GoogleAuthProvider();
+
+// Exporting Google sign-in method
+const signInWithGoogle = () => {
+  return signInWithPopup(auth, googleProvider);
+};
+
+export { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, database, ref, set, get, onValue, push, update, remove, signInWithGoogle };
