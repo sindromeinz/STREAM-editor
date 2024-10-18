@@ -111,15 +111,25 @@ const Editor = () => {
           <p className="text-center text-danger">You do not have access to this file.</p>
         )}
 
-        {showChatBot && (
-          <div className="chatbot-container">
-            <ChatBot ref={chatBotRef} />
-          </div>
-        )}
+        {/* Keep ChatBot always mounted, just toggle visibility */}
+        <div className={`chatbot-container ${showChatBot ? 'visible' : 'hidden'}`}>
+          <ChatBot ref={chatBotRef} />
+        </div>
       </div>
     </div>
   );
 };
+
+// CSS for visibility
+const styles = `
+.hidden {
+  display: none; /* Hides the ChatBot */
+}
+
+.visible {
+  display: block; /* Shows the ChatBot */
+}
+`;
 
 Editor.modules = {
   toolbar: [
@@ -141,5 +151,10 @@ Editor.formats = [
   'color', 'background',
   'align',
 ];
+
+// Add the styles to the document
+const styleElement = document.createElement("style");
+styleElement.innerHTML = styles;
+document.head.appendChild(styleElement);
 
 export default Editor;
