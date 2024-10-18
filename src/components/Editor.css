@@ -40,3 +40,35 @@
 .ql-editor.ql-blank::before {
   color: #bdbdbd; /* Lighter placeholder text color */
 }
+
+.chatbot-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 300px; /* Set the width of the sidebar */
+  height: 100%; /* Full height */
+  background-color: #090808; /* Background color */
+  box-shadow: -2px 0 5px rgba(35, 14, 217, 0.5); /* Add a shadow for depth */
+  padding: 20px; /* Padding inside the sidebar */
+  transition: transform 0.3s ease; /* Smooth transition for opening/closing */
+  z-index: 1000; /* Ensure it appears above other content */
+}
+
+.container-fluid {
+  height: 100vh; /* Full height of the viewport */
+  overflow: hidden; /* Prevent scroll bars from appearing */
+}
+
+.sidebar {
+  width: 250px; /* Fixed width for the sidebar */
+  background-color: #f8f9fa; /* Light background color */
+  padding: 20px; /* Padding for the sidebar */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional shadow effect */
+  position: absolute; /* Use absolute positioning */
+  top: 0; /* Align to the top */
+  left: -250px; /* Start hidden off the screen */
+  transition: left 0.3s ease; /* Smooth transition for sliding */
+  z-index: 1000; /* Ensure the sidebar is above other elements */
+}
+
+

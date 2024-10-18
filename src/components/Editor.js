@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { database, ref, update, onValue } from '../firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { useParams } from 'react-router-dom';
-import { auth } from '../firebase'; // For accessing the current user's UID
-import './Editor.css'
+import { useParams } from 'react-router-dom'; 
+import { auth } from '../firebase'; 
+import ChatBot from './ChatBot'; // Import the ChatBot component
+import './Editor.css';
 
 const Editor = () => {
   const { fileId } = useParams();
   const [content, setContent] = useState('');
   const [allowed, setAllowed] = useState(false);
+  const [showChatBot, setShowChatBot] = useState(false); // State for sidebar visibility
+  const [isUpdating, setIsUpdating] = useState(false); // Track if an update is in progress
+  const saveTimeoutRef = useRef(null); // Use useRef to hold the timeout
 
   useEffect(() => {
     if (fileId) {
@@ -33,17 +37,37 @@ const Editor = () => {
     }
   }, [fileId]);
 
-  const handleSave = async () => {
-    if (fileId && allowed) {
+  // Debounced save function
+  const saveContentToFirebase = async (newContent) => {
+    if (fileId && allowed && !isUpdating) {
+      setIsUpdating(true); // Prevent multiple updates
       try {
         await update(ref(database, `files/${fileId}`), {
-          content: content,
+          content: newContent,
         });
         console.log('Content updated successfully');
       } catch (error) {
         console.error('Error updating content:', error);
+      } finally {
+        setIsUpdating(false); // Reset update state
       }
     }
+  };
+
+  const handleContentChange = (newContent) => {
+    setContent(newContent); // Update local state
+
+    // Debounce the save operation
+    if (newContent !== content) {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); // Clear previous timeout
+      saveTimeoutRef.current = setTimeout(() => {
+        saveContentToFirebase(newContent);
+      }, 500); // Delay in milliseconds
+    }
+  };
+
+  const toggleChatBot = () => {
+    setShowChatBot((prev) => !prev); // Toggle sidebar visibility
   };
 
   return (
@@ -55,16 +79,26 @@ const Editor = () => {
             <div className="quill-container">
               <ReactQuill
                 value={content}
-                onChange={setContent}
+                onChange={handleContentChange} // Update the handler
                 modules={Editor.modules}
                 formats={Editor.formats}
               />
-              <button className="btn btn-primary mt-3" onClick={handleSave}>Save Content</button>
+              {/* Removed the Save Content button */}
+              {/* Moved ChatBot toggle button here */}
+              <button className="btn btn-secondary mt-3" onClick={toggleChatBot}>
+                {showChatBot ? 'Hide ChatBot' : 'Show ChatBot'}
+              </button>
             </div>
           </div>
         </div>
       ) : (
         <p className="text-center text-danger">You do not have access to this file.</p>
+      )}
+
+      {showChatBot && (
+        <div className="chatbot-sidebar">
+          <ChatBot />
+        </div>
       )}
     </div>
   );
