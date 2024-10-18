@@ -72,3 +72,63 @@
 }
 
 
+/* Sidebar wrapper */
+.sidebar-wrapper {
+  position: fixed;
+  top: 0;
+  left: -180px; /* Partially visible (20px of the sidebar will be shown) */
+  height: 100vh;
+  width: 200px; /* Static sidebar width */
+  transition: transform 0.3s ease, left 0.3s ease;
+  background-color: #343a40; /* Dark background for visibility */
+  z-index: 1000;
+}
+
+.sidebar-wrapper:hover {
+  transform: translateX(180px); /* Slide in the sidebar fully */
+}
+
+/* Sidebar content */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Align button to the top */
+  padding-top: 10px; /* Add space at the top */
+}
+
+/* Sidebar button */
+.sidebar-button {
+  width: 100%;
+  height: 40px; /* Consistent button height */
+  background-color: #6c757d;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex; /* Flexbox for centering */
+  align-items: center; /* Vertically center */
+  justify-content: center; /* Horizontally center */
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-button:hover {
+  background-color: #495057;
+}
+
+/* Text inside the button */
+.button-text {
+  display: inline; /* Show text when sidebar slides in */
+}
+
+/* ChatBot container */
+.chatbot-container {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 999;
+  max-width: 400px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+

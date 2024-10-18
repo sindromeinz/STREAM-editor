@@ -4,16 +4,16 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useParams } from 'react-router-dom'; 
 import { auth } from '../firebase'; 
-import ChatBot from './ChatBot'; // Import the ChatBot component
+import ChatBot from './ChatBot'; 
 import './Editor.css';
 
 const Editor = () => {
   const { fileId } = useParams();
   const [content, setContent] = useState('');
   const [allowed, setAllowed] = useState(false);
-  const [showChatBot, setShowChatBot] = useState(false); // State for sidebar visibility
-  const [isUpdating, setIsUpdating] = useState(false); // Track if an update is in progress
-  const saveTimeoutRef = useRef(null); // Use useRef to hold the timeout
+  const [showChatBot, setShowChatBot] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (fileId) {
@@ -37,10 +37,9 @@ const Editor = () => {
     }
   }, [fileId]);
 
-  // Debounced save function
   const saveContentToFirebase = async (newContent) => {
     if (fileId && allowed && !isUpdating) {
-      setIsUpdating(true); // Prevent multiple updates
+      setIsUpdating(true); 
       try {
         await update(ref(database, `files/${fileId}`), {
           content: newContent,
@@ -49,57 +48,63 @@ const Editor = () => {
       } catch (error) {
         console.error('Error updating content:', error);
       } finally {
-        setIsUpdating(false); // Reset update state
+        setIsUpdating(false);
       }
     }
   };
 
   const handleContentChange = (newContent) => {
-    setContent(newContent); // Update local state
-
-    // Debounce the save operation
+    setContent(newContent);
     if (newContent !== content) {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); // Clear previous timeout
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         saveContentToFirebase(newContent);
-      }, 500); // Delay in milliseconds
+      }, 500);
     }
   };
 
   const toggleChatBot = () => {
-    setShowChatBot((prev) => !prev); // Toggle sidebar visibility
+    setShowChatBot((prev) => !prev);
   };
 
   return (
-    <div className="container my-5">
-      {allowed ? (
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <h2 className="text-center">Rich Text Editor</h2>
-            <div className="quill-container">
-              <ReactQuill
-                value={content}
-                onChange={handleContentChange} // Update the handler
-                modules={Editor.modules}
-                formats={Editor.formats}
-              />
-              {/* Removed the Save Content button */}
-              {/* Moved ChatBot toggle button here */}
-              <button className="btn btn-secondary mt-3" onClick={toggleChatBot}>
-                {showChatBot ? 'Hide ChatBot' : 'Show ChatBot'}
-              </button>
+    <div className="container my-5 d-flex">
+      {/* Sliding sidebar */}
+      <div className="sidebar-wrapper">
+        <div className="sidebar-content">
+          <button className="sidebar-button" onClick={toggleChatBot}>
+            <span className="button-text">
+              {showChatBot ? 'Hide ChatBot' : 'Show ChatBot'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div className="editor-container flex-grow-1">
+        {allowed ? (
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <h2 className="text-center">Rich Text Editor</h2>
+              <div className="quill-container">
+                <ReactQuill
+                  value={content}
+                  onChange={handleContentChange}
+                  modules={Editor.modules}
+                  formats={Editor.formats}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <p className="text-center text-danger">You do not have access to this file.</p>
-      )}
+        ) : (
+          <p className="text-center text-danger">You do not have access to this file.</p>
+        )}
 
-      {showChatBot && (
-        <div className="chatbot-sidebar">
-          <ChatBot />
-        </div>
-      )}
+        {showChatBot && (
+          <div className="chatbot-container">
+            <ChatBot />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
