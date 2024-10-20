@@ -25,31 +25,32 @@ const ChatBot = React.forwardRef((_, ref) => {
     if (input.trim()) {
       const newMessages = [...messages, { text: input, user: true }];
       setMessages(newMessages);
-      setInput('');
+      setInput(''); // Reset input field
 
       try {
         setLoading(true);
         const response = await axios.post(
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
           {
-            "contents": [
+            contents: [
               {
-                "parts": [
+                parts: [
                   {
-                    "text": input
+                    text: input
                   }
                 ]
               }
             ]
           }
         );
+
         const botResponse = response.data.candidates[0].content.parts[0].text;
-        setLoading(false);
         setMessages([...newMessages, { text: botResponse, user: false }]);
       } catch (error) {
         console.error('Error sending message:', error);
-        setLoading(false);
         setMessages([...newMessages, { text: 'Error: Could not get response from AI', user: false }]);
+      } finally {
+        setLoading(false); // Ensure loading is reset regardless of the outcome
       }
     }
   };
@@ -65,24 +66,26 @@ const ChatBot = React.forwardRef((_, ref) => {
         const response = await axios.post(
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
           {
-            "contents": [
+            contents: [
               {
-                "parts": [
+                parts: [
                   {
-                    "text": `Summarize the following text: "${text}"`
+                    text: `Summarize the following text: "${text}"`
                   }
                 ]
               }
             ]
           }
         );
+
         const botResponse = response.data.candidates[0].content.parts[0].text;
-        setLoading(false);
         setMessages([...newMessages, { text: botResponse, user: false }]);
       } catch (error) {
         console.error('Error summarizing text:', error);
-        setLoading(false);
         setMessages([...newMessages, { text: 'Error: Could not get summary from AI', user: false }]);
+      } finally {
+        setLoading(false); // Reset loading state
+        setIsSummarizing(false); // Reset summarizing state
       }
     }
   };
@@ -109,9 +112,7 @@ const ChatBot = React.forwardRef((_, ref) => {
             )}
           </div>
         ))}
-        {loading && (
-          <div className="loader">Loading...</div>
-        )}
+        {loading && <div className="loader">Loading...</div>}
         <div ref={messagesEndRef} /> {/* This div acts as the scroll target */}
       </div>
       <div className="chatbot-input">
@@ -121,11 +122,12 @@ const ChatBot = React.forwardRef((_, ref) => {
           placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} // Changed to onKeyDown for faster response
         />
         <button
           className="send-button"
           onClick={handleSendMessage}
+          disabled={loading} // Disable the button while loading
         >
           <FaPaperPlane />
         </button>

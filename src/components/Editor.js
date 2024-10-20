@@ -107,8 +107,9 @@ const Editor = () => {
   };
 
   const handleSummarize = () => {
+    setShowChatBot(true); // Show ChatBot when summarizing
     if (chatBotRef.current) {
-      chatBotRef.current.handleCommand(`summarise ${content}`);
+      chatBotRef.current.handleCommand(`summarize ${content}`);
     }
   };
 
