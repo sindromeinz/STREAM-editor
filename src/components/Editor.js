@@ -15,8 +15,6 @@ const Editor = () => {
   const [versionHistory, setVersionHistory] = useState([]); // Stores version history
   const [showVersionHistory, setShowVersionHistory] = useState(false); // Toggles version history display
   const previousContentRef = useRef(''); // Stores previous content for diff comparison
-  const saveTimeoutRef = useRef(null);
-  const [isUpdating, setIsUpdating] = useState(false); // Prevents saving while updating
   const [restoringVersion, setRestoringVersion] = useState(false); // Track when a version is being restored
   const chatBotRef = useRef(null); // Declare the chatBotRef here
 
@@ -45,8 +43,7 @@ const Editor = () => {
   }, [fileId]);
 
   const saveContentToFirebase = async (newContent) => {
-    if (fileId && allowed && !isUpdating && !restoringVersion) { // Skip saving when restoring a version
-      setIsUpdating(true);
+    if (fileId && allowed && !restoringVersion) { // Skip saving when restoring a version
       try {
         // Save the current content as a new version only if there's a significant change
         const newVersion = {
@@ -66,8 +63,6 @@ const Editor = () => {
         console.log('Content updated successfully with version history');
       } catch (error) {
         console.error('Error updating content:', error);
-      } finally {
-        setIsUpdating(false);
       }
     }
   };
@@ -75,15 +70,13 @@ const Editor = () => {
   const handleContentChange = (newContent) => {
     // Skip content changes and save when restoring a version
     if (restoringVersion) return;
-
+  
     setContent(newContent);
 
-    if (hasSignificantChange(newContent)) {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => {
-        saveContentToFirebase(newContent);
-      }, 500);
-    }
+  };
+
+  const handleCreateVersion = () => {
+    saveContentToFirebase(content);
   };
 
   const hasSignificantChange = (newContent) => {
@@ -107,9 +100,9 @@ const Editor = () => {
   };
 
   const handleSummarize = () => {
-    setShowChatBot(true); // Show ChatBot when summarizing
+    setShowChatBot(true);
     if (chatBotRef.current) {
-      chatBotRef.current.handleCommand(`summarize ${content}`);
+      chatBotRef.current.handleCommand(`summarise ${content}`);
     }
   };
 
@@ -153,6 +146,9 @@ const Editor = () => {
           <button className="sidebar-button" onClick={toggleVersionHistory}>
             {showVersionHistory ? 'Hide Version History' : 'Show Version History'}
           </button>
+          <button className="sidebar-button" onClick={handleCreateVersion}>
+            Create Version
+          </button>
           {showVersionHistory && (
             <div className="version-list">
               {versionHistory.length === 0 ? (
@@ -185,7 +181,7 @@ const Editor = () => {
             </div>
           </div>
         ) : (
-          <p className="text-center text-danger">You do not have access to this file.</p>
+          <p className="text-center text-danger">File does not exist or you do not have access to this file</p>
         )}
 
         {/* Keep ChatBot always mounted, just toggle visibility */}

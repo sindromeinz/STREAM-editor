@@ -57,10 +57,8 @@ const ChatBot = React.forwardRef((_, ref) => {
 
   const handleSummarize = async (text) => {
     if (text) {
-      const newMessages = [...messages, { text: `Summarizing: ${text}`, user: true }];
-      setMessages(newMessages);
       setIsSummarizing(true); // Set summarizing state to true
-
+  
       try {
         setLoading(true);
         const response = await axios.post(
@@ -77,18 +75,19 @@ const ChatBot = React.forwardRef((_, ref) => {
             ]
           }
         );
-
+  
         const botResponse = response.data.candidates[0].content.parts[0].text;
-        setMessages([...newMessages, { text: botResponse, user: false }]);
+        setMessages([...messages, { text: botResponse, user: false }]); // Only add bot's response
       } catch (error) {
         console.error('Error summarizing text:', error);
-        setMessages([...newMessages, { text: 'Error: Could not get summary from AI', user: false }]);
+        setMessages([...messages, { text: 'Error: Could not get summary from AI', user: false }]);
       } finally {
         setLoading(false); // Reset loading state
         setIsSummarizing(false); // Reset summarizing state
       }
     }
   };
+  
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
