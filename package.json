@@ -22,6 +22,8 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.27.0",
     "react-scripts": "^5.0.1",
+    "react-speech-recognition": "^3.10.0",
+    "speech-recognition": "^0.0.1",
     "web-vitals": "^2.1.4",
     "y-websocket": "^2.0.4",
     "yjs": "^13.6.20"

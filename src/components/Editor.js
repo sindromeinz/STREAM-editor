@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { database, ref, update, onValue } from '../firebase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -9,14 +9,15 @@ import './Editor.css';
 
 const Editor = () => {
   const { fileId } = useParams();
-  const [content, setContent] = useState(''); // Editor content
-  const [allowed, setAllowed] = useState(false); // Whether the user is allowed to edit
+  const [content, setContent] = useState(''); 
+  const [allowed, setAllowed] = useState(false); 
   const [showChatBot, setShowChatBot] = useState(false);
-  const [versionHistory, setVersionHistory] = useState([]); // Stores version history
-  const [showVersionHistory, setShowVersionHistory] = useState(false); // Toggles version history display
-  const previousContentRef = useRef(''); // Stores previous content for diff comparison
-  const [restoringVersion, setRestoringVersion] = useState(false); // Track when a version is being restored
-  const chatBotRef = useRef(null); // Declare the chatBotRef here
+  const [versionHistory, setVersionHistory] = useState([]); 
+  const [showVersionHistory, setShowVersionHistory] = useState(false); 
+  const previousContentRef = useRef(''); 
+  const [restoringVersion, setRestoringVersion] = useState(false); 
+  const chatBotRef = useRef(null); 
+  const saveTimeoutRef = useRef(null); 
 
   useEffect(() => {
     if (fileId) {
@@ -29,8 +30,8 @@ const Editor = () => {
           if (fileData.allowedUsers.includes(currentUserEmail)) {
             setAllowed(true);
             setContent(fileData.content || '');
-            previousContentRef.current = fileData.content || ''; // Set previous content
-            setVersionHistory(fileData.versionHistory || []); // Load version history
+            previousContentRef.current = fileData.content || '';
+            setVersionHistory(fileData.versionHistory || []);
           } else {
             setAllowed(false);
             console.log('Access denied: You are not allowed to edit this file.');
@@ -42,57 +43,57 @@ const Editor = () => {
     }
   }, [fileId]);
 
-  const saveContentToFirebase = async (newContent) => {
-    if (fileId && allowed && !restoringVersion) { // Skip saving when restoring a version
-      try {
-        // Save the current content as a new version only if there's a significant change
-        const newVersion = {
-          timestamp: Date.now(),
-          content: newContent, // Save the full content of the document
-        };
+  const saveContentToFirebase = useCallback((newContent) => {
+    if (fileId && allowed && !restoringVersion) {
+      clearTimeout(saveTimeoutRef.current); 
+      saveTimeoutRef.current = setTimeout(async () => { 
+        try {
+          await update(ref(database, `files/${fileId}`), {
+            content: newContent,
+          });
 
-        // Update the content and version history in Firebase
-        await update(ref(database, `files/${fileId}`), {
-          content: newContent,
-          versionHistory: [newVersion, ...versionHistory], // Add new version at the beginning
-        });
+          previousContentRef.current = newContent;
+          console.log('Content updated successfully without creating a new version');
+        } catch (error) {
+          console.error('Error updating content:', error);
+        }
+      }, 150); 
+    }
+  }, [fileId, allowed, restoringVersion]);
 
-        // Update the previous content reference
-        previousContentRef.current = newContent;
+  const handleContentChange = (newContent) => {
+    if (restoringVersion) return;
 
-        console.log('Content updated successfully with version history');
-      } catch (error) {
-        console.error('Error updating content:', error);
-      }
+    setContent(newContent);
+    saveContentToFirebase(newContent);
+  };
+
+  const handleCreateVersion = async () => {
+    const newVersion = {
+      timestamp: Date.now(),
+      content: content,
+    };
+
+    try {
+      await update(ref(database, `files/${fileId}`), {
+        versionHistory: [newVersion, ...versionHistory],
+      });
+      console.log('New version created successfully');
+    } catch (error) {
+      console.error('Error creating version:', error);
     }
   };
 
-  const handleContentChange = (newContent) => {
-    // Skip content changes and save when restoring a version
-    if (restoringVersion) return;
-  
-    setContent(newContent);
+  const handleVersionSelect = (version) => {
+    console.log("Restoring version:", version);
+    setRestoringVersion(true);
 
-  };
+    const restoredContent = version.content;
+    setContent(restoredContent);
+    previousContentRef.current = restoredContent;
 
-  const handleCreateVersion = () => {
-    saveContentToFirebase(content);
-  };
-
-  const hasSignificantChange = (newContent) => {
-    const cleanedPrevious = cleanContent(previousContentRef.current);
-    const cleanedNew = cleanContent(newContent);
-
-    // Return true if content is different after trimming unnecessary whitespace, tabs, new lines
-    return cleanedPrevious !== cleanedNew;
-  };
-
-  const cleanContent = (content) => {
-    // Remove all non-visible characters like spaces, tabs, newlines, and normalize content
-    return content
-      .replace(/[\t\n\r]+/g, ' ') // Replace tabs, newlines, and carriage returns with a space
-      .replace(/ {2,}/g, ' ') // Replace multiple spaces with a single space
-      .trim(); // Remove leading and trailing spaces
+    console.log("Version successfully restored.");
+    setRestoringVersion(false);
   };
 
   const toggleChatBot = () => {
@@ -106,25 +107,6 @@ const Editor = () => {
     }
   };
 
-  const handleVersionSelect = (version) => {
-    console.log("Restoring version:", version);
-
-    // Set restoringVersion to true to prevent automatic save
-    setRestoringVersion(true);
-
-    // Replace current content with the selected version's content
-    const restoredContent = version.content;
-    setContent(restoredContent);
-
-    // Set previous content to the restored version
-    previousContentRef.current = restoredContent;
-
-    console.log("Version successfully restored.");
-
-    // Reset restoringVersion to false after restoring
-    setRestoringVersion(false);
-  };
-
   const toggleVersionHistory = () => {
     setShowVersionHistory((prev) => !prev);
     console.log("Version History Toggle:", !showVersionHistory);
@@ -132,7 +114,6 @@ const Editor = () => {
 
   return (
     <div className="container my-5 d-flex">
-      {/* Sliding sidebar */}
       <div className="sidebar-wrapper">
         <div className="sidebar-content">
           <button className="sidebar-button" onClick={toggleChatBot}>
@@ -143,11 +124,11 @@ const Editor = () => {
           <button className="sidebar-button" onClick={handleSummarize}>
             Summarize Content
           </button>
-          <button className="sidebar-button" onClick={toggleVersionHistory}>
-            {showVersionHistory ? 'Hide Version History' : 'Show Version History'}
-          </button>
           <button className="sidebar-button" onClick={handleCreateVersion}>
             Create Version
+          </button>
+          <button className="sidebar-button" onClick={toggleVersionHistory}>
+            {showVersionHistory ? 'Hide Version History' : 'Show Version History'}
           </button>
           {showVersionHistory && (
             <div className="version-list">
@@ -169,7 +150,7 @@ const Editor = () => {
         {allowed ? (
           <div className="row justify-content-center">
             <div className="col-md-8">
-              <h2 className="text-center">Rich Text Editor</h2>
+              <h2 className="text-center">STREAM Editor</h2>
               <div className="quill-container">
                 <ReactQuill
                   value={content}
@@ -184,7 +165,6 @@ const Editor = () => {
           <p className="text-center text-danger">File does not exist or you do not have access to this file</p>
         )}
 
-        {/* Keep ChatBot always mounted, just toggle visibility */}
         <div className={`chatbot-container ${showChatBot ? 'visible' : 'hidden'}`}>
           <ChatBot ref={chatBotRef} />
         </div>
@@ -193,14 +173,13 @@ const Editor = () => {
   );
 };
 
-// CSS for visibility and scrollable version list
 const styles = `
 .hidden {
-  display: none; /* Hides the ChatBot */
+  display: none; 
 }
 
 .visible {
-  display: block; /* Shows the ChatBot */
+  display: block; 
 }
 
 .version-list {
@@ -228,7 +207,6 @@ const styles = `
 }
 `;
 
-// Add the styles to the document
 const styleElement = document.createElement("style");
 styleElement.innerHTML = styles;
 document.head.appendChild(styleElement);
