@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { database, ref, push, set, onValue, remove } from '../firebase';
-import { auth } from '../firebase'; 
+import { database, ref, push, set, onValue, remove, update, get } from '../firebase';
+import { auth } from '../firebase';
 import { Link } from 'react-router-dom';
-import './FileManager.css'; // Custom styles
+import './FileManager.css'; 
 
 const FileManager = () => {
   const [files, setFiles] = useState([]);
   const [newFileName, setNewFileName] = useState('');
   const [newFileAllowedUsers, setNewFileAllowedUsers] = useState('');
+  const [editUsersFileId, setEditUsersFileId] = useState(null); // To track which file's users are being edited
+  const [newUserEmail, setNewUserEmail] = useState('');
   const currentUserEmail = auth.currentUser?.email;
 
   useEffect(() => {
@@ -17,8 +19,8 @@ const FileManager = () => {
       const data = snapshot.val();
       if (data) {
         const accessibleFiles = Object.keys(data)
-          .filter(key => 
-            data[key].creator === currentUserEmail || 
+          .filter(key =>
+            data[key].creator === currentUserEmail ||
             (Array.isArray(data[key].allowedUsers) && data[key].allowedUsers.includes(currentUserEmail))
           )
           .map(key => ({
@@ -63,6 +65,31 @@ const FileManager = () => {
     await remove(fileRef);
   };
 
+  const handleAddUser = async (fileId) => {
+    if (newUserEmail.trim() === "") return;
+
+    const fileRef = ref(database, `files/${fileId}`);
+    const fileSnapshot = await get(fileRef);  // Using 'get' to retrieve data
+    const fileData = fileSnapshot.val();
+
+    if (fileData) {
+      const updatedUsers = [...fileData.allowedUsers, newUserEmail.trim()];
+      await update(fileRef, { allowedUsers: updatedUsers });
+      setNewUserEmail('');  // Clear input after adding
+    }
+  };
+
+  const handleRemoveUser = async (fileId, userEmail) => {
+    const fileRef = ref(database, `files/${fileId}`);
+    const fileSnapshot = await get(fileRef);  
+    const fileData = fileSnapshot.val();
+
+    if (fileData) {
+      const updatedUsers = fileData.allowedUsers.filter(user => user !== userEmail);
+      await update(fileRef, { allowedUsers: updatedUsers });
+    }
+  };
+
   return (
     <div className="glass-container">
       <h2>File Manager</h2>
@@ -97,7 +124,48 @@ const FileManager = () => {
                 <td>{file.creator}</td>
                 <td>
                   <Link to={`/editor/${file.id}`} className="edit-btn">Edit</Link>
-                  <button className="delete-btn" onClick={() => handleDeleteFile(file.id)}>Delete</button>
+                  {file.creator === currentUserEmail && (
+                    <button className="delete-btn" onClick={() => handleDeleteFile(file.id)}>Delete</button>
+                  )}
+                  <button className="edit-btn" onClick={() => setEditUsersFileId(editUsersFileId === file.id ? null : file.id)}>
+                    {editUsersFileId === file.id ? "Hide Users" : "Manage Users"}
+                  </button>
+                  {editUsersFileId === file.id && (
+                    <div className="user-management">
+                      <ul>
+                        {file.allowedUsers.map(userEmail => (
+                          <li key={userEmail} style={{ display: 'flex', alignItems: 'center' }}>
+                          {userEmail === file.creator && (
+                            <img
+                              src = "https://cdn-icons-png.flaticon.com/256/6941/6941697.png"
+                              alt = 'creator'
+                              style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                            />
+                          )}
+                          {userEmail} 
+                          {userEmail !== file.creator && (
+                            <button className="remove-user-btn" onClick={() => handleRemoveUser(file.id, userEmail)}>
+                              Remove
+                            </button>
+                          )}
+                         </li>
+                        ))}
+                      </ul>
+                      <div className="add-user-section">
+                        <input
+                          type="text"
+                          placeholder="Add new user email"
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                          style={{
+                            color: 'white',
+                            fontSize: '20px'
+                          }}
+                        />
+                        <button onClick={() => handleAddUser(file.id)}>Add User</button>
+                      </div>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))
