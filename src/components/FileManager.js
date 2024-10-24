@@ -127,9 +127,11 @@ const FileManager = () => {
                   {file.creator === currentUserEmail && (
                     <button className="delete-btn" onClick={() => handleDeleteFile(file.id)}>Delete</button>
                   )}
-                  <button className="edit-btn" onClick={() => setEditUsersFileId(editUsersFileId === file.id ? null : file.id)}>
-                    {editUsersFileId === file.id ? "Hide Users" : "Manage Users"}
-                  </button>
+                  {(
+                    <button className="edit-btn" onClick={() => setEditUsersFileId(editUsersFileId === file.id ? null : file.id)}>
+                    {editUsersFileId === file.id ? "Hide Users" : (file.creator === currentUserEmail ? "Manage Users" : "List Users")}
+                    </button>                 
+                  )}
                   {editUsersFileId === file.id && (
                     <div className="user-management">
                       <ul>
@@ -143,15 +145,16 @@ const FileManager = () => {
                             />
                           )}
                           {userEmail} 
-                          {userEmail !== file.creator && (
+                          {userEmail !== file.creator && file.creator === currentUserEmail && (
                             <button className="remove-user-btn" onClick={() => handleRemoveUser(file.id, userEmail)}>
                               Remove
                             </button>
                           )}
                          </li>
                         ))}
-                      </ul>
+                      </ul>                     
                       <div className="add-user-section">
+                      {file.creator === currentUserEmail && (
                         <input
                           type="text"
                           placeholder="Add new user email"
@@ -162,7 +165,10 @@ const FileManager = () => {
                             fontSize: '20px'
                           }}
                         />
+                      )}
+                        {file.creator === currentUserEmail && (
                         <button onClick={() => handleAddUser(file.id)}>Add User</button>
+                        )}
                       </div>
                     </div>
                   )}
