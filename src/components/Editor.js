@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { database, ref, update, onValue } from '../firebase';
+import Quill from 'quill';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useParams } from 'react-router-dom';
@@ -18,6 +19,38 @@ const Editor = () => {
   const [restoringVersion, setRestoringVersion] = useState(false); 
   const chatBotRef = useRef(null); 
   const saveTimeoutRef = useRef(null); 
+  // Metrics state
+  const [latency, setLatency] = useState(null);
+  const [throughput, setThroughput] = useState(0);
+  const [memoryUsage, setMemoryUsage] = useState(0);
+  const [systemUptime, setSystemUptime] = useState(0);
+  const [opsPerSecond, setOpsPerSecond] = useState(0); // Tracks ops for the current second
+ 
+  const startTime = useRef(Date.now());  // For system uptime
+  const maxUptime = 24 * 60 * 60 * 1000; // Maximum uptime of 24 hours in milliseconds
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setThroughput(opsPerSecond); // Update throughput with ops from the last second
+      setOpsPerSecond(0); // Reset counter for the next second
+    }, 1000); // Run every second
+  
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, [opsPerSecond]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - startTime.current;
+      const uptimePercentage = Math.min((elapsedTime / maxUptime) * 100, 100); // Cap at 100%
+      setSystemUptime(uptimePercentage.toFixed(2));
+      
+      const newMemoryUsage = window.performance.memory.usedJSHeapSize / 1024 / 1024; // Memory in MB
+      setMemoryUsage(newMemoryUsage);
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (fileId) {
@@ -45,19 +78,26 @@ const Editor = () => {
 
   const saveContentToFirebase = useCallback((newContent) => {
     if (fileId && allowed && !restoringVersion) {
-      clearTimeout(saveTimeoutRef.current); 
-      saveTimeoutRef.current = setTimeout(async () => { 
+      const operationStartTime = Date.now();
+  
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(async () => {
         try {
           await update(ref(database, `files/${fileId}`), {
             content: newContent,
           });
-
+  
           previousContentRef.current = newContent;
-          console.log('Content updated successfully without creating a new version');
+  
+          const latencyTime = Date.now() - operationStartTime;
+          setLatency(latencyTime); // Update latency
+  
+          // Increment the ops counter for the current second
+          setOpsPerSecond((prev) => prev + 1);
         } catch (error) {
           console.error('Error updating content:', error);
         }
-      }, 150); 
+      }, 150);
     }
   }, [fileId, allowed, restoringVersion]);
 
@@ -168,10 +208,31 @@ const Editor = () => {
         <div className={`chatbot-container ${showChatBot ? 'visible' : 'hidden'}`}>
           <ChatBot ref={chatBotRef} />
         </div>
+
+        <MetricsBox
+          latency={latency}
+          throughput={throughput}
+          memoryUsage={memoryUsage}
+          systemUptime={systemUptime}
+        />
+
+        <div className={`chatbot-container ${showChatBot ? 'visible' : 'hidden'}`}>
+          <ChatBot ref={chatBotRef} />
+        </div>
       </div>
     </div>
   );
 };
+
+const MetricsBox = ({ latency, throughput, memoryUsage, systemUptime }) => (
+  <div className="metrics-box">
+    <h5>Metrics</h5>
+    <p><strong>Latency:</strong> {latency ? `${latency} ms` : 'N/A'}</p>
+    <p><strong>Throughput:</strong> {throughput ? `${throughput} ops/sec` : 'N/A'}</p>
+    <p><strong>Memory Usage:</strong> {memoryUsage ? `${memoryUsage.toFixed(2)} MB` : 'N/A'}</p>
+    <p><strong>System Uptime:</strong> {systemUptime ? `${systemUptime}% (1 day)` : 'N/A'}</p>
+  </div>
+);
 
 const styles = `
 .hidden {
@@ -211,23 +272,30 @@ const styleElement = document.createElement("style");
 styleElement.innerHTML = styles;
 document.head.appendChild(styleElement);
 
+// Register fonts
+const Font = Quill.import('formats/font');
+Font.whitelist = ['default', 'serif', 'monospace'];
+Quill.register(Font, true);
+
+// Editor toolbar configuration
 Editor.modules = {
   toolbar: [
-    [{ 'header': '1' }, { 'header': '2' }],
+    [{ font: Font.whitelist }], // Add font dropdown
+    [{ header: '1' }, { header: '2' }],
     ['bold', 'italic', 'underline'],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
     ['link', 'image'],
-    [{ 'align': [] }],
+    [{ align: [] }],
     ['color', 'background'],
-    ['font'],
   ],
 };
 
 Editor.formats = [
+  'font', // Add font to formats
   'header', 'bold', 'italic', 'underline',
   'list', 'bullet', 'indent',
-  'link', 'image', 'color', 'background', 'font',
-  'align'
+  'link', 'image', 'color', 'background',
+  'align',
 ];
 
 export default Editor;

@@ -4,13 +4,14 @@
   fill: white !important;  /* Ensure SVG icons are white */
 }
 
-/* Align toolbar icons in a straight line */
 .ql-toolbar {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   background-color: transparent !important; /* Transparent background */
   border: none; /* Remove any border from the toolbar */
+  max-width: 100%; /* Prevent toolbar from exceeding parent width */
+  overflow: visible; 
 }
 
 /* Set proper alignment and spacing for the toolbar buttons */
@@ -21,19 +22,29 @@
   align-items: center;
 }
 
-/* Editor container styling */
+/* General styles for Quill Editor */
 .ql-container {
   background-color: #1c1c1c; /* Dark background for editor */
   color: white !important;   /* Ensure text inside the editor is white */
   border-radius: 8px;
   border: 1px solid #ccc; /* Optional border for clarity */
+  max-width: 100%; /* Prevent container from expanding beyond its parent */
+  width: 100%; /* Ensure it takes up the full width of its parent */
+  box-sizing: border-box; /* Include padding and borders in total width */
+  overflow: hidden; /* Hide any content spilling outside */
 }
 
-/* Editor text styling */
 .ql-editor {
   color: white !important;    /* Ensure text is white */
-  background-color: #1c1c1c;  /* Dark background for the editor content */
-  min-height: 700px;
+  background-color: #1c1c1c;  /* Dark background for editor content */
+  min-height: 700px;          /* Set a minimum height for the editor */
+  max-width: 100%;            /* Prevent editor from expanding beyond its container */
+  width: 100%;                /* Ensure editor fills its container */
+  box-sizing: border-box;     /* Include padding and borders in total width */
+  overflow-wrap: break-word;  /* Ensure long words break and wrap */
+  word-break: break-word;     /* Break overly long words */
+  white-space: pre-wrap;      /* Preserve spacing and allow wrapping */
+  overflow-x: hidden;         /* Prevent horizontal scrolling */
 }
 
 /* Placeholder text styling */
@@ -70,7 +81,6 @@
   transition: left 0.3s ease; /* Smooth transition for sliding */
   z-index: 1000; /* Ensure the sidebar is above other elements */
 }
-
 
 /* Sidebar wrapper */
 .sidebar-wrapper {
@@ -130,6 +140,14 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-
-
-
+.metrics-box {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
