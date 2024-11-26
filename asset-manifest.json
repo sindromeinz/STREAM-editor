@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/STREAM-editor/static/css/main.db6a7eec.css",
-    "main.js": "/STREAM-editor/static/js/main.462065de.js",
+    "main.js": "/STREAM-editor/static/js/main.f8b3e090.js",
     "static/js/453.047baa24.chunk.js": "/STREAM-editor/static/js/453.047baa24.chunk.js",
     "index.html": "/STREAM-editor/index.html",
     "main.db6a7eec.css.map": "/STREAM-editor/static/css/main.db6a7eec.css.map",
-    "main.462065de.js.map": "/STREAM-editor/static/js/main.462065de.js.map",
+    "main.f8b3e090.js.map": "/STREAM-editor/static/js/main.f8b3e090.js.map",
     "453.047baa24.chunk.js.map": "/STREAM-editor/static/js/453.047baa24.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.db6a7eec.css",
-    "static/js/main.462065de.js"
+    "static/js/main.f8b3e090.js"
   ]
 }
