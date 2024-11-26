@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FaPaperPlane } from 'react-icons/fa';
+import { FaPaperPlane, FaMicrophone } from 'react-icons/fa';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import './ChatBot.css'; // Import the ChatBot specific styles
+import './ChatBot.css';
 
 const ChatBot = React.forwardRef((_, ref) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false); // New state to track summarization
+  const [isRecording, setIsRecording] = useState(false); // State to track recording
+  const recognitionRef = useRef(null); // Ref to store the recognition instance
   const messagesEndRef = useRef(null); // Ref for scrolling
 
   // Expose handleCommand method to the parent component
@@ -23,37 +25,36 @@ const ChatBot = React.forwardRef((_, ref) => {
 
   const handleSendMessage = async () => {
     if (input.trim()) {
-      const newMessages = [...messages, { text: input, user: true }];
-      setMessages(newMessages);
-      setInput(''); // Reset input field
-
       try {
         setLoading(true);
+        
+        // Send the message directly to the AI without placing it in the chat box
         const response = await axios.post(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateMessage?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
           {
-            contents: [
-              {
-                parts: [
-                  {
-                    text: input
-                  }
-                ]
-              }
-            ]
+            prompt: {
+              text: input
+            },
+            candidate_count: 1
           }
         );
-
-        const botResponse = response.data.candidates[0].content.parts[0].text;
-        setMessages([...newMessages, { text: botResponse, user: false }]);
+        
+        const botResponse = response.data.candidates[0].output;
+        
+        // Only update the chat with the AI's response
+        setMessages([{ text: botResponse, user: false }]);
+        
+        setInput(''); // Reset input field
       } catch (error) {
         console.error('Error sending message:', error);
-        setMessages([...newMessages, { text: 'Error: Could not get response from AI', user: false }]);
+        setMessages([{ text: 'Error: Could not get response from AI', user: false }]);
       } finally {
         setLoading(false); // Ensure loading is reset regardless of the outcome
       }
     }
   };
+  
+  
 
   const handleSummarize = async (text) => {
     if (text) {
@@ -87,7 +88,48 @@ const ChatBot = React.forwardRef((_, ref) => {
       }
     }
   };
+
+  const startRecording = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Your browser does not support speech recognition.');
+      return;
+    }
   
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+  
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+  
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+  
+      // Automatically send the transcription as a message
+      const newMessages = [...messages, { text: transcript, user: true }];
+      setMessages(newMessages);
+      handleSendMessage(transcript); // Pass the transcript to handleSendMessage
+    };
+  
+    recognition.start();
+    recognitionRef.current = recognition;
+  };
+  
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -129,6 +171,13 @@ const ChatBot = React.forwardRef((_, ref) => {
           disabled={loading} // Disable the button while loading
         >
           <FaPaperPlane />
+        </button>
+        <button
+          className={`mic-button ${isRecording ? 'recording' : ''}`}
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={loading}
+        >
+          <FaMicrophone />
         </button>
       </div>
     </div>
