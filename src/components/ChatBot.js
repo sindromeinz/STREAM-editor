@@ -25,29 +25,32 @@ const ChatBot = React.forwardRef((_, ref) => {
 
   const handleSendMessage = async () => {
     if (input.trim()) {
+      const newMessages = [...messages, { text: input, user: true }];
+      setMessages(newMessages);
+      setInput(''); // Reset input field
+
       try {
         setLoading(true);
-        
-        // Send the message directly to the AI without placing it in the chat box
         const response = await axios.post(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateMessage?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBJe3N-YjKDTTGdlcqdUJeVZd9b-IB3j3U',
           {
-            prompt: {
-              text: input
-            },
-            candidate_count: 1
+            contents: [
+              {
+                parts: [
+                  {
+                    text: input
+                  }
+                ]
+              }
+            ]
           }
         );
-        
-        const botResponse = response.data.candidates[0].output;
-        
-        // Only update the chat with the AI's response
-        setMessages([{ text: botResponse, user: false }]);
-        
-        setInput(''); // Reset input field
+
+        const botResponse = response.data.candidates[0].content.parts[0].text;
+        setMessages([...newMessages, { text: botResponse, user: false }]);
       } catch (error) {
         console.error('Error sending message:', error);
-        setMessages([{ text: 'Error: Could not get response from AI', user: false }]);
+        setMessages([...newMessages, { text: 'Error: Could not get response from AI', user: false }]);
       } finally {
         setLoading(false); // Ensure loading is reset regardless of the outcome
       }
@@ -63,7 +66,7 @@ const ChatBot = React.forwardRef((_, ref) => {
       try {
         setLoading(true);
         const response = await axios.post(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyD1iSzJrlXHv0cHvBB_umWWmWMAzmYoD64',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBJe3N-YjKDTTGdlcqdUJeVZd9b-IB3j3U',
           {
             contents: [
               {
@@ -112,11 +115,6 @@ const ChatBot = React.forwardRef((_, ref) => {
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
-  
-      // Automatically send the transcription as a message
-      const newMessages = [...messages, { text: transcript, user: true }];
-      setMessages(newMessages);
-      handleSendMessage(transcript); // Pass the transcript to handleSendMessage
     };
   
     recognition.start();

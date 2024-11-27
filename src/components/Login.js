@@ -71,9 +71,6 @@ const Login = () => {
           <div className="go" onClick={handleGoogleLogin}>
             <i className="fab fa-google"></i> Google
           </div>
-          <div className="fb">
-            <i className="fab fa-facebook"></i> Facebook
-          </div>
         </div>
       </form>
     </div>
